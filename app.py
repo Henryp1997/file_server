@@ -54,15 +54,26 @@ app.layout = html.Div([
         ]),
         dcc.Store(id="current_project_path", data=None),
         dcc.Store(id="opened-folders", data=[]),
+        dcc.Download(id="download_component"),
         html.Ul(id="file-tree", style={"display": "none"})
     ], style={"background-color": "#F2F2FD"})
 ])
 
 
 ### CALLBACKS
-# @app.server.route("/download/<path:filename>")
-# def download_file(filename):
-#     return flask.send_from_directory(ROOT_DIR, filename, as_attachment=True)
+@app.callback(
+    Output("download_component", "data"),
+    Input({"type": "tree-item", "item_type": "file", "name": ALL, "path": ALL}, "n_clicks"),
+    prevent_initial_call=True
+)
+def download_file(n_clicks_list):
+    triggered = ctx.triggered_id
+    path = triggered["path"]
+
+    if all(val == 0 for val in n_clicks_list):
+        return
+
+    return dcc.send_file(path)
 
 
 @app.callback(
