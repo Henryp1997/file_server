@@ -1,5 +1,5 @@
 import dash
-from dash import html, dcc, ctx
+from dash import html, dcc, ctx, no_update as nop
 from dash.dependencies import Input, Output, State, ALL
 import yaml
 import flask
@@ -22,23 +22,27 @@ app.layout = html.Div([
         ),
         style={
             "background-color": "#FFE0E0",
-            "border-radius": "5px",
+            "border-radius": "8px",
             "display": "flex",
             "justifyContent": "center",
-            "alignItems": "center"
+            "alignItems": "center",
+            "border": "2px solid #AAAAAA"
         }
     ),
     html.Div([
-        html.A(
-            "GitLab Projects",
-            id="header",
-            className="header_clickable",
+        html.Div(
+            html.A(
+                "GitLab Projects",
+                id="header",
+                className="header_clickable"
+            ),
+            style={"padding-top": "1.5vh"}
         ),
         html.Div([
             html.Ul(
                 [html.Li(
                     html.A(
-                        project,
+                        f"\u2192 {project}",
                         id={"type": "project_link", "name": project, "path": path},
                         className="htmlA_clickable",
                         style={"font-size": "30px"},
@@ -56,7 +60,13 @@ app.layout = html.Div([
         dcc.Store(id="opened-folders", data=[]),
         dcc.Download(id="download_component"),
         html.Ul(id="file-tree", style={"display": "none"})
-    ], style={"background-color": "#F2F2FD"})
+    ], style={
+        "background-color": "#F2F2FD",
+        "min-height": "100vh",
+        "margin-top": "1.5vh",
+        "border": "2px solid #AAAAAA",
+        "border-radius": "8px"
+    })
 ])
 
 
@@ -86,7 +96,7 @@ def download_file(n_clicks_list):
 )
 def choose_project(n_clicks_list):   
     project = ctx.triggered_id
-    return {"display": "block"}, {"display": "none"}, "File Explorer (click to go back)", project["path"]
+    return {"display": "block"}, {"display": "none"}, "File Explorer (click here to go back to projects)", project["path"]
     
 
 @app.callback(
@@ -100,8 +110,9 @@ def choose_project(n_clicks_list):
     prevent_initial_call=True
 )
 def navigate_with_header(n, header_text):
-    if header_text == "File Explorer (click to go back)":
+    if header_text == "File Explorer (click here to go back to projects)":
         return {"display": "none"}, {"listStyleType": "none", "display": "block"}, "GitLab Projects", None, []
+    return (nop,)*5
 
 
 @app.callback(
@@ -138,4 +149,4 @@ def toggle_folder(n_clicks_list, opened):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run(debug=True)
