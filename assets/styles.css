@@ -1,0 +1,18 @@
+html {
+    font-family: Arial, Helvetica, sans-serif
+}
+
+.file_list_item {
+    list-style-type: none;
+    margin-bottom: 1.5vh
+}
+
+.htmlA_clickable {
+    font-size: 22px;
+    margin-left: 1.5vw
+}
+
+.htmlA_clickable:hover {
+    cursor: pointer;
+    font-weight: bold;
+}
