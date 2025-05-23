@@ -14,6 +14,9 @@ server = app.server  # for hosting
 with open("projects.yaml", "r") as f:
     projects = yaml.safe_load(f)
 
+with open("old_projects.yaml", "r") as f:
+    old_projects = yaml.safe_load(f)
+
 app.layout = html.Div([
     html.Div(
         html.H1(
@@ -56,6 +59,32 @@ app.layout = html.Div([
                 style={"listStyleType": "none", "display": "block"}
             )
         ]),
+        html.Div(
+            html.A(
+                "Deprecated Projects",
+                id="deprecated_header",
+                className="header_clickable"
+            ),
+            style={"padding-top": "1.5vh"}
+        ),
+        html.Div([
+            html.Ul(
+                [html.Li(
+                    html.A(
+                        f"\u2192 {project}",
+                        id={"type": "project_link", "name": project, "path": path},
+                        className="htmlA_clickable",
+                        style={"font-size": "30px"},
+                        n_clicks=0
+                    ),
+                    style={"margin-bottom": "1.5vh"}
+                )
+                for project, path in old_projects.items()
+                ], 
+                id="old_project_list",
+                style={"listStyleType": "none", "display": "block"}
+            )
+        ]),
         dcc.Store(id="current_project_path", data=None),
         dcc.Store(id="opened-folders", data=[]),
         dcc.Download(id="download_component"),
@@ -89,20 +118,26 @@ def download_file(n_clicks_list):
 @app.callback(
     Output("file-tree", "style", allow_duplicate=True),
     Output("project_list", "style", allow_duplicate=True),
+    Output("old_project_list", "style", allow_duplicate=True),
     Output("header", "children", allow_duplicate=True),
+    Output("deprecated_header", "style", allow_duplicate=True),
     Output("current_project_path", "data"),
     Input({"type": "project_link", "name": ALL, "path": ALL}, "n_clicks"),
     prevent_initial_call=True
 )
 def choose_project(n_clicks_list):   
     project = ctx.triggered_id
-    return {"display": "block"}, {"display": "none"}, "File Explorer (click here to go back to projects)", project["path"]
+    hide = {"display": "none"}
+    show = {"display": "block"}
+    return show, hide, hide, f"{project['name']} (click here to go back to projects)", hide, project["path"]
     
 
 @app.callback(
     Output("file-tree", "style", allow_duplicate=True),
     Output("project_list", "style", allow_duplicate=True),
+    Output("old_project_list", "style", allow_duplicate=True),
     Output("header", "children", allow_duplicate=True),
+    Output("deprecated_header", "style", allow_duplicate=True),
     Output("current_project_path", "data", allow_duplicate=True),
     Output("opened-folders", "data", allow_duplicate=True),
     Input("header", "n_clicks"),
@@ -110,9 +145,10 @@ def choose_project(n_clicks_list):
     prevent_initial_call=True
 )
 def navigate_with_header(n, header_text):
-    if header_text == "File Explorer (click here to go back to projects)":
-        return {"display": "none"}, {"listStyleType": "none", "display": "block"}, "GitLab Projects", None, []
-    return (nop,)*5
+    if "(click here to go back to projects)" in header_text:
+        list_style = {"listStyleType": "none", "display": "block"}
+        return {"display": "none"}, list_style, list_style, "GitLab Projects", {}, None, []
+    return (nop,)*6
 
 
 @app.callback(
