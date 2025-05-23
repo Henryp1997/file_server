@@ -13,6 +13,20 @@ icons = IconTypes(
     "\U0001F5BC\uFE0F "
 )
 
+extensions = {
+    ".txt"  : icons.text,
+    ".yaml" : icons.settings,
+    ".json" : icons.settings,
+    ".py"   : icons.python,
+    ".csv"  : icons.data,
+    ".m"    : icons.script,
+    ".css"  : icons.script,
+    ".cpp"  : icons.script,
+    ".png"  : icons.image,
+    ".jpg"  : icons.image,
+    ".jpeg" : icons.image
+}
+
 hide = {"display": "none"}
 block = {"display": "block"}
 show = {}
@@ -23,19 +37,6 @@ def populate_file_tree(dir, opened_paths):
     files = []
     dirs = []
     gitignore_list = get_gitignore_list(base)
-    extensions = {
-        ".txt"  : icons.text,
-        ".yaml" : icons.settings,
-        ".json" : icons.settings,
-        ".py"   : icons.python,
-        ".csv"  : icons.data,
-        ".m"    : icons.script,
-        ".css"  : icons.script,
-        ".cpp"  : icons.script,
-        ".png"  : icons.image,
-        ".jpg"  : icons.image,
-        ".jpeg" : icons.image
-    }
 
     root_files = [i for i in root if not i.is_dir()]
     root_dirs = list(set(root) - set(root_files))
