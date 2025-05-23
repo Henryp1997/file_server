@@ -2,8 +2,6 @@ import dash
 from dash import html, dcc, ctx, no_update as nop
 from dash.dependencies import Input, Output, State, ALL
 import yaml
-import flask
-import os
 
 # Custom imports
 import helper
@@ -11,6 +9,7 @@ import helper
 app = dash.Dash(__name__)
 server = app.server  # for hosting
 
+# Load project dicts
 with open("projects.yaml", "r") as f:
     projects = yaml.safe_load(f)
 
@@ -18,6 +17,7 @@ with open("old_projects.yaml", "r") as f:
     old_projects = yaml.safe_load(f)
 
 app.layout = html.Div([
+    # Top banner
     html.Div(
         html.H1(
             "GitLab File Server",
@@ -32,12 +32,14 @@ app.layout = html.Div([
             "border": "2px solid #AAAAAA"
         }
     ),
+
+    # Project lists, file tree etc
     html.Div([
         html.Div(
             html.A(
                 "GitLab Projects",
                 id="header",
-                className="header_clickable"
+                className="header header_not_clickable",
             ),
             style={"padding-top": "1.5vh"}
         ),
@@ -55,7 +57,7 @@ app.layout = html.Div([
                 )
                 for project, path in projects.items()
                 ], 
-                id="project_list",
+                id={"type": "project_list", "name": "projects"},
                 style={"listStyleType": "none", "display": "block"}
             )
         ]),
@@ -63,7 +65,7 @@ app.layout = html.Div([
             html.A(
                 "Deprecated Projects",
                 id="deprecated_header",
-                className="header_clickable"
+                className="header header_not_clickable"
             ),
             style={"padding-top": "1.5vh"}
         ),
@@ -81,14 +83,14 @@ app.layout = html.Div([
                 )
                 for project, path in old_projects.items()
                 ], 
-                id="old_project_list",
+                id={"type": "project_list", "name": "old_projects"},
                 style={"listStyleType": "none", "display": "block"}
             )
         ]),
         dcc.Store(id="current_project_path", data=None),
-        dcc.Store(id="opened-folders", data=[]),
+        dcc.Store(id="opened_folders", data=[]),
         dcc.Download(id="download_component"),
-        html.Ul(id="file-tree", style={"display": "none"})
+        html.Ul(id="file_tree", style={"display": "none"})
     ], style={
         "background-color": "#F2F2FD",
         "min-height": "100vh",
@@ -102,10 +104,14 @@ app.layout = html.Div([
 ### CALLBACKS
 @app.callback(
     Output("download_component", "data"),
-    Input({"type": "tree-item", "item_type": "file", "name": ALL, "path": ALL}, "n_clicks"),
+    Input(
+        {"type": "tree-item", "item_type": "file", "name": ALL, "path": ALL},
+        "n_clicks"
+    ),
     prevent_initial_call=True
 )
 def download_file(n_clicks_list):
+    """ Download selected file """
     triggered = ctx.triggered_id
     path = triggered["path"]
 
@@ -116,61 +122,98 @@ def download_file(n_clicks_list):
 
 
 @app.callback(
-    Output("file-tree", "style", allow_duplicate=True),
-    Output("project_list", "style", allow_duplicate=True),
-    Output("old_project_list", "style", allow_duplicate=True),
-    Output("header", "children", allow_duplicate=True),
-    Output("deprecated_header", "style", allow_duplicate=True),
+    Output("file_tree", "style", True),
+    Output(
+        {"type": "project_list", "name": ALL},
+        "style",
+        True
+    ),
+    Output("header", "children", True),
+    Output("header", "className", True),
+    Output("deprecated_header", "style", True),
     Output("current_project_path", "data"),
-    Input({"type": "project_link", "name": ALL, "path": ALL}, "n_clicks"),
+    Input(
+        {"type": "project_link", "name": ALL, "path": ALL},
+        "n_clicks"
+    ),
     prevent_initial_call=True
 )
-def choose_project(n_clicks_list):   
+def choose_project(_):   
+    """ 
+    Handle user clicking project name. Hide project
+    lists and show contents of clicked project
+    """
     project = ctx.triggered_id
-    hide = {"display": "none"}
-    show = {"display": "block"}
-    return show, hide, hide, f"{project['name']} (click here to go back to projects)", hide, project["path"]
+    new_header = f"{project['name']} (click here to go back to projects)"
+    new_header_class = "header header_clickable"
+    return (
+        helper.block,
+        [helper.hide, helper.hide],
+        new_header,
+        new_header_class,
+        helper.hide,
+        project["path"]
+    )
     
 
 @app.callback(
-    Output("file-tree", "style", allow_duplicate=True),
-    Output("project_list", "style", allow_duplicate=True),
-    Output("old_project_list", "style", allow_duplicate=True),
-    Output("header", "children", allow_duplicate=True),
-    Output("deprecated_header", "style", allow_duplicate=True),
-    Output("current_project_path", "data", allow_duplicate=True),
-    Output("opened-folders", "data", allow_duplicate=True),
+    Output("file_tree", "style", True),
+    Output(
+        {"type": "project_list", "name": ALL},
+        "style",
+        True
+    ),
+    Output("header", "children", True),
+    Output("header", "className", True),
+    Output("deprecated_header", "style", True),
+    Output("current_project_path", "data", True),
+    Output("opened_folders", "data", True),
     Input("header", "n_clicks"),
     State("header", "children"),
     prevent_initial_call=True
 )
 def navigate_with_header(n, header_text):
+    """
+    Re-show project lists and hide current project
+    contents if header clicked. Reset opened_folders list
+    """
     if "(click here to go back to projects)" in header_text:
+        new_header_class = "header header_not_clickable"
         list_style = {"listStyleType": "none", "display": "block"}
-        return {"display": "none"}, list_style, list_style, "GitLab Projects", {}, None, []
+        return (
+            helper.hide,
+            [list_style, list_style],
+            "GitLab Projects",
+            new_header_class,
+            helper.show,
+            None,
+            []
+        )
     return (nop,)*6
 
 
 @app.callback(
-    Output("file-tree", "children"),
-    Input("opened-folders", "data"),
+    Output("file_tree", "children"),
+    Input("opened_folders", "data"),
     Input("current_project_path", "data"),
-    State("file-tree", "style"),
+    State("file_tree", "style"),
 )
-def update_tree(opened, path, style):
-    if style["display"] == "block":
+def update_tree(opened, path, tree_style):
+    """ Update directory tree with contents of project """
+    if tree_style["display"] != "none":
         file_tree = helper.populate_file_tree(path, opened)
         return file_tree
     return ""
 
 
 @app.callback(
-    Output("opened-folders", "data"),
+    Output("opened_folders", "data"),
     Input({"type": "tree-item", "item_type": "dir", "name": ALL, "path": ALL}, "n_clicks"),
-    State("opened-folders", "data"),
+    State("opened_folders", "data"),
     prevent_initial_call=True
 )
 def toggle_folder(n_clicks_list, opened):
+    """ Show contents of the clicked directory, hide if clicked again """
     triggered = ctx.triggered_id
 
     if all(n_clicks == 0 for n_clicks in n_clicks_list):

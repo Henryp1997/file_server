@@ -13,6 +13,9 @@ icons = IconTypes(
     "\U0001F5BC\uFE0F "
 )
 
+hide = {"display": "none"}
+block = {"display": "block"}
+show = {}
 
 def populate_file_tree(dir, opened_paths):
     base = Path(dir)

@@ -2,16 +2,22 @@ html {
     font-family: Arial, Helvetica, sans-serif
 }
 
+/* File/dir list items */
 .file_list_item {
     list-style-type: none;
     margin-bottom: 1.5vh
 }
 
-.header_clickable {
+/* Headers */
+.header {
     font-size: 30px;
     margin-left: 1.5vw;
     margin-top: 1.5vw;
     font-weight: bold;
+}
+
+.header_not_clickable:hover {
+    text-decoration: none;
 }
 
 .header_clickable:hover {
@@ -19,6 +25,7 @@ html {
     text-decoration: underline;
 }
 
+/* A tags */
 .htmlA_clickable {
     font-size: 22px;
     margin-left: 1.5vw
