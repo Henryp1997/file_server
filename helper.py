@@ -84,7 +84,7 @@ def check_if_ignored(name, item_type, gitignore_list):
         return False
 
     for ignore in gitignore_list:
-        if name in ignore:
+        if name == ignore:
             do_append = False
 
         if item_type == "file":
