@@ -1,6 +1,17 @@
 import os
+from collections import namedtuple
 from pathlib import Path
 from dash import html
+
+IconTypes = namedtuple("icons", ("text", "settings", "python", "data", "script", "image"))
+icons = IconTypes(
+    "\U0001F4C4",
+    "\u2699\uFE0F ",
+    "\U0001F40D",
+    "\U0001F4CA",
+    "\U0001F4DD",
+    "\U0001F5BC\uFE0F "
+)
 
 
 def populate_file_tree(dir, opened_paths):
@@ -10,17 +21,17 @@ def populate_file_tree(dir, opened_paths):
     dirs = []
     gitignore_list = get_gitignore_list(base)
     extensions = {
-        ".txt" : "\U0001F4C4",
-        ".yaml": "\u2699\uFE0F ",
-        ".json": "\u2699\uFE0F ",
-        ".py"  : "\U0001F40D",
-        ".csv" : "\U0001F4CA",
-        ".m"   : "\U0001F4DD",
-        ".css" : "\U0001F4DD",
-        ".cpp" : "\U0001F4DD",
-        ".png" : "\U0001F5BC\uFE0F ",
-        ".jpg" : "\U0001F5BC\uFE0F ",
-        ".jpeg" : "\U0001F5BC\uFE0F "
+        ".txt"  : icons.text,
+        ".yaml" : icons.settings,
+        ".json" : icons.settings,
+        ".py"   : icons.python,
+        ".csv"  : icons.data,
+        ".m"    : icons.script,
+        ".css"  : icons.script,
+        ".cpp"  : icons.script,
+        ".png"  : icons.image,
+        ".jpg"  : icons.image,
+        ".jpeg" : icons.image
     }
 
     root_files = [i for i in root if not i.is_dir()]
@@ -91,17 +102,6 @@ def check_if_ignored(name, item_type, gitignore_list):
             if ignore == f"*{Path(name).suffix}":
                 # E.g., if *.csv in .gitignore, all .csv files are ignored
                 return False
-
-    # # Now check if files are actually a part of the git repo
-    # import subprocess
-
-    # repo_path = r"C:\ALL_WORK\code\python-bi"
-    # stderr = subprocess.run(
-    #     ["git", "ls-files", "--error-unmatch", name],
-    #     cwd=repo_path,
-    #     stderr=subprocess.PIPE
-    # )
-    # print(stderr)
 
     return do_append
 
