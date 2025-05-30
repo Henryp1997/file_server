@@ -1,3 +1,4 @@
+import os
 import dash
 from dash import html, dcc, ctx, no_update as nop
 from dash.dependencies import Input, Output, State, ALL
@@ -10,10 +11,11 @@ app = dash.Dash(__name__)
 server = app.server  # for hosting
 
 # Load project dicts
-with open("projects.yaml", "r") as f:
+here = os.path.dirname(os.path.realpath(__file__))
+with open(f"{here}/projects.yaml", "r") as f:
     projects = yaml.safe_load(f)
 
-with open("old_projects.yaml", "r") as f:
+with open(f"{here}/old_projects.yaml", "r") as f:
     old_projects = yaml.safe_load(f)
 
 app.layout = html.Div([
