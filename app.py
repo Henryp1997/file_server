@@ -2,6 +2,7 @@ import os
 import dash
 from dash import html, dcc, ctx, no_update as nop
 from dash.dependencies import Input, Output, State, ALL
+from flask import abort
 import yaml
 
 # Custom imports
@@ -10,13 +11,19 @@ import helper
 app = dash.Dash(__name__)
 server = app.server  # for hosting
 
+rarrow = "\u2192"
+
 # Load project dicts
 here = os.path.dirname(os.path.realpath(__file__))
 with open(f"{here}/projects.yaml", "r") as f:
     projects = yaml.safe_load(f)
+    if projects is None:
+        projects = {}
 
 with open(f"{here}/old_projects.yaml", "r") as f:
     old_projects = yaml.safe_load(f)
+    if old_projects is None:
+        old_projects = {}
 
 app.layout = html.Div([
     # Top banner
@@ -39,7 +46,7 @@ app.layout = html.Div([
     html.Div([
         html.Div(
             html.A(
-                "GitLab Projects",
+                "Projects",
                 id="header",
                 className="header header_not_clickable",
             ),
@@ -47,17 +54,18 @@ app.layout = html.Div([
         ),
         html.Div([
             html.Ul(
-                [html.Li(
-                    html.A(
-                        f"\u2192 {project}",
-                        id={"type": "project_link", "name": project, "path": path},
-                        className="htmlA_clickable",
-                        style={"font-size": "30px"},
-                        n_clicks=0
-                    ),
-                    style={"margin-bottom": "1.5vh"}
-                )
-                for project, path in projects.items()
+                [
+                    html.Li(
+                        html.A(
+                            f"{rarrow} {project}",
+                            id={"type": "project_link", "name": project, "path": path},
+                            className="htmlA_clickable",
+                            style={"font-size": "30px"},
+                            n_clicks=0
+                        ),
+                        style={"margin-bottom": "1.5vh"}
+                    )
+                    for project, path in projects.items()
                 ], 
                 id={"type": "project_list", "name": "projects"},
                 style={"listStyleType": "none", "display": "block"}
@@ -73,17 +81,18 @@ app.layout = html.Div([
         ),
         html.Div([
             html.Ul(
-                [html.Li(
-                    html.A(
-                        f"\u2192 {project}",
-                        id={"type": "project_link", "name": project, "path": path},
-                        className="htmlA_clickable",
-                        style={"font-size": "30px"},
-                        n_clicks=0
-                    ),
-                    style={"margin-bottom": "1.5vh"}
-                )
-                for project, path in old_projects.items()
+                [
+                    html.Li(
+                        html.A(
+                            f"{rarrow} {project}",
+                            id={"type": "project_link", "name": project, "path": path},
+                            className="htmlA_clickable",
+                            style={"font-size": "30px"},
+                            n_clicks=0
+                        ),
+                        style={"margin-bottom": "1.5vh"}
+                    )
+                    for project, path in old_projects.items()
                 ], 
                 id={"type": "project_list", "name": "old_projects"},
                 style={"listStyleType": "none", "display": "block"}
@@ -91,7 +100,6 @@ app.layout = html.Div([
         ]),
         dcc.Store(id="current_project_path", data=None),
         dcc.Store(id="opened_folders", data=[]),
-        dcc.Download(id="download_component"),
         html.Ul(id="file_tree", style={"display": "none"})
     ], style={
         "background-color": "#F2F2FD",
@@ -104,23 +112,50 @@ app.layout = html.Div([
 
 
 ### CALLBACKS
-@app.callback(
-    Output("download_component", "data"),
-    Input(
-        {"type": "tree-item", "item_type": "file", "name": ALL, "path": ALL},
-        "n_clicks"
-    ),
-    prevent_initial_call=True
-)
-def download_file(n_clicks_list):
-    """ Download selected file """
-    triggered = ctx.triggered_id
-    path = triggered["path"]
+@app.server.route("/view/<path:filename>")
+def view_file(filename):
+    filepath = os.path.join(filename)
+    if not os.path.isfile(filepath):
+        return abort(404)
 
-    if all(val == 0 for val in n_clicks_list):
-        return
+    with open(filepath, "r", encoding="utf-8") as f:
+        lines = f.readlines()
 
-    return dcc.send_file(path)
+    file_contents = "".join(lines)
+    download_url = f"/download/{filename}"
+
+    html_template = f"""
+    <html>
+    <body>
+    <div style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: monospace;">
+            <h1>{os.path.basename(filename)}</h1>
+            <a href="{download_url}" download style="
+                background-color: #007bff;
+                color: white;
+                padding: 6px 12px;
+                text-decoration: none;
+                border-radius: 4px;
+                font-size: 14px;
+            ">Download</a>
+    </div>
+    <div style="
+        white-space: pre-wrap;
+        font-family: monospace;
+        font-size: 16px;
+        background-color: #F2F2F2;
+        border: 1px solid #777777;
+        border-radius: 5px;
+        padding: 10px;
+        min-height: 100vh">
+        {file_contents}</div>
+    </body>
+    </html>
+    """
+    return html_template
 
 
 @app.callback(

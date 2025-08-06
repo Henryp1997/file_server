@@ -2,6 +2,7 @@ import os
 from collections import namedtuple
 from pathlib import Path
 from dash import html
+import urllib.parse
 
 IconTypes = namedtuple("icons", ("text", "settings", "python", "data", "script", "image"))
 icons = IconTypes(
@@ -125,18 +126,38 @@ def sort_priority(file_component: html.Li):
 
 
 def create_list_item(icon, name, item_type, path, child_items=None, ul_style={"display": "none"}):
-    return html.Li([
-        html.A(
+    # Common ID
+    item_id = {
+        "type": "tree-item",
+        "item_type": item_type,  # "dir" or "file"
+        "name": name,
+        "path": path
+    }
+
+    # Folder behavior — clickable span
+    if item_type == "dir":
+        content = html.Span(
             f"{icon} {name}",
             className="htmlA_clickable",
+            id=item_id,
             n_clicks=0,
-            id={
-                "type": "tree-item",
-                "item_type": item_type, # "dir" or "file"
-                "name": name,
-                "path": path
-            }
-        ),
+            style={"cursor": "pointer"}
+        )
+
+    # File behavior — opens in new tab
+    else:
+        quoted_path = urllib.parse.quote(path)
+        content = html.A(
+            f"{icon} {name}",
+            className="htmlA_clickable",
+            href=f"/view/{quoted_path}",
+            target="_blank",
+            id=item_id,
+            style={"text-decoration": "none", "color": "black"}
+        )
+
+    return html.Li([
+        content,
         html.Ul(
             children=[] if child_items is None else child_items,
             id={
