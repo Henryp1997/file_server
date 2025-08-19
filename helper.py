@@ -1,8 +1,19 @@
 import os
+import yaml
 from collections import namedtuple
 from pathlib import Path
 from dash import html
 import urllib.parse
+
+# Load project dicts
+here = os.path.dirname(os.path.realpath(__file__))
+with open(f"{here}/config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+    projects = config["Projects"]
+    old_projects = config["OldProjects"]
+    if not projects: projects = {}
+    if not old_projects: old_projects = {}
+    BASEDIR = config["BASEDIR"]
 
 IconTypes = namedtuple("icons", ("text", "settings", "python", "data", "script", "image"))
 icons = IconTypes(
@@ -13,6 +24,8 @@ icons = IconTypes(
     "\U0001F4DD",
     "\U0001F5BC\uFE0F "
 )
+
+rarrow = "\u2192"
 
 extensions = {
     ".txt"  : icons.text,
@@ -146,6 +159,7 @@ def create_list_item(icon, name, item_type, path, child_items=None, ul_style={"d
 
     # File behavior — opens in new tab
     else:
+        rel_path = os.path.relpath(path, BASEDIR)
         quoted_path = urllib.parse.quote(path)
         content = html.A(
             f"{icon} {name}",

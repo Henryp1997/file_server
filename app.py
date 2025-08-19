@@ -3,27 +3,12 @@ import dash
 from dash import html, dcc, ctx, no_update as nop
 from dash.dependencies import Input, Output, State, ALL
 from flask import abort
-import yaml
 
 # Custom imports
 import helper
 
 app = dash.Dash(__name__)
 server = app.server  # for hosting
-
-rarrow = "\u2192"
-
-# Load project dicts
-here = os.path.dirname(os.path.realpath(__file__))
-with open(f"{here}/projects.yaml", "r") as f:
-    projects = yaml.safe_load(f)
-    if projects is None:
-        projects = {}
-
-with open(f"{here}/old_projects.yaml", "r") as f:
-    old_projects = yaml.safe_load(f)
-    if old_projects is None:
-        old_projects = {}
 
 app.layout = html.Div([
     # Top banner
@@ -57,7 +42,7 @@ app.layout = html.Div([
                 [
                     html.Li(
                         html.A(
-                            f"{rarrow} {project}",
+                            f"{helper.rarrow} {project}",
                             id={"type": "project_link", "name": project, "path": path},
                             className="htmlA_clickable",
                             style={"font-size": "30px"},
@@ -65,7 +50,7 @@ app.layout = html.Div([
                         ),
                         style={"margin-bottom": "1.5vh"}
                     )
-                    for project, path in projects.items()
+                    for project, path in helper.projects.items()
                 ], 
                 id={"type": "project_list", "name": "projects"},
                 style={"listStyleType": "none", "display": "block"}
@@ -84,7 +69,7 @@ app.layout = html.Div([
                 [
                     html.Li(
                         html.A(
-                            f"{rarrow} {project}",
+                            f"{helper.rarrow} {project}",
                             id={"type": "project_link", "name": project, "path": path},
                             className="htmlA_clickable",
                             style={"font-size": "30px"},
@@ -92,7 +77,7 @@ app.layout = html.Div([
                         ),
                         style={"margin-bottom": "1.5vh"}
                     )
-                    for project, path in old_projects.items()
+                    for project, path in helper.old_projects.items()
                 ], 
                 id={"type": "project_list", "name": "old_projects"},
                 style={"listStyleType": "none", "display": "block"}
@@ -114,7 +99,7 @@ app.layout = html.Div([
 ### CALLBACKS
 @app.server.route("/view/<path:filename>")
 def view_file(filename):
-    filepath = os.path.join(filename)
+    filepath = os.path.join(helper.BASEDIR, filename)
     if not os.path.isfile(filepath):
         return abort(404)
 
