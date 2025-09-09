@@ -1,8 +1,10 @@
 import os
 import dash
+import html as inbuilt_html
 from dash import html, dcc, ctx, no_update as nop
 from dash.dependencies import Input, Output, State, ALL
-from flask import abort
+from flask import abort, url_for, Response, request, send_file
+import urllib
 
 # Custom imports
 import helper
@@ -97,50 +99,52 @@ app.layout = html.Div([
 
 
 ### CALLBACKS
-@app.server.route("/view/<path:filename>")
-def view_file(filename):
-    filepath = os.path.join(helper.BASEDIR, filename)
-    if not os.path.isfile(filepath):
+@app.server.route("/download")
+def download_file():
+    filepath = request.args.get("path", type=str)
+    if not filepath or not os.path.isfile(filepath):
         return abort(404)
 
-    with open(filepath, "r", encoding="utf-8") as f:
-        lines = f.readlines()
+    return send_file(
+        filepath,
+        as_attachment=True,
+        download_name=os.path.basename(filepath)
+    )
 
-    file_contents = "".join(lines)
-    download_url = f"/download/{filename}"
 
+@app.server.route("/view")
+def view_file():
+    filepath = request.args.get("path", type=str)
+    if not filepath or not os.path.isfile(filepath):
+        return abort(404)
+
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            file_contents = f.read()
+        # escape so file content doesn’t break your HTML
+        file_contents = inbuilt_html.escape(file_contents)
+    except UnicodeDecodeError:
+        file_contents = "(binary file)"
+
+    # Style the file viewing page to monospace font with borders etc
+    download_href = f"download?path={urllib.parse.quote(filepath)}"
     html_template = f"""
     <html>
     <body>
-    <div style="
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-family: monospace;">
-            <h1>{os.path.basename(filename)}</h1>
-            <a href="{download_url}" download style="
-                background-color: #007bff;
-                color: white;
-                padding: 6px 12px;
-                text-decoration: none;
-                border-radius: 4px;
-                font-size: 14px;
-            ">Download</a>
-    </div>
-    <div style="
-        white-space: pre-wrap;
-        font-family: monospace;
-        font-size: 16px;
-        background-color: #F2F2F2;
-        border: 1px solid #777777;
-        border-radius: 5px;
-        padding: 10px;
-        min-height: 100vh">
-        {file_contents}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-family:monospace;">
+        <h1>{os.path.basename(filepath)}</h1>
+        <a href="{download_href}" download
+            style="background-color:#007bff;color:white;padding:6px 12px;text-decoration:none;border-radius:4px;font-size:14px;">
+            Download
+        </a>
+      </div>
+      <div style="white-space:pre-wrap;font-family:monospace;font-size:16px;
+                  background-color:#F2F2F2;border:1px solid #777;border-radius:5px;
+                  padding:10px;min-height:100vh">{file_contents}</div>
     </body>
     </html>
     """
-    return html_template
+    return Response(html_template, mimetype="text/html")
 
 
 @app.callback(
@@ -250,4 +254,4 @@ def toggle_folder(n_clicks_list, opened):
 
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000)
+    app.run(debug=False, host="0.0.0.0", port=5010)

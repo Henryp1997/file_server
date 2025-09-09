@@ -160,11 +160,10 @@ def create_list_item(icon, name, item_type, path, child_items=None, ul_style={"d
     # File behavior — opens in new tab
     else:
         rel_path = os.path.relpath(path, BASEDIR)
-        quoted_path = urllib.parse.quote(path)
         content = html.A(
             f"{icon} {name}",
             className="htmlA_clickable",
-            href=f"/view/{quoted_path}",
+            href=f"view?path={urllib.parse.quote(path)}", # Use a query string
             target="_blank",
             id=item_id,
             style={"text-decoration": "none", "color": "black"}
