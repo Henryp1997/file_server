@@ -64,7 +64,7 @@ app.layout = html.Div([
                 id="deprecated_header",
                 className="header header_not_clickable"
             ),
-            style={"padding-top": "1.5vh"}
+            style={"padding-top": "1.5vh", "font-size": "25px"}
         ),
         html.Div([
             html.Ul(
