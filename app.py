@@ -64,7 +64,7 @@ app.layout = html.Div([
                 id="deprecated_header",
                 className="header header_not_clickable"
             ),
-            style={"padding-top": "1.5vh", "font-size": "25px"}
+            style={"padding-top": "1.5vh"}
         ),
         html.Div([
             html.Ul(
@@ -74,6 +74,7 @@ app.layout = html.Div([
                             f"{helper.rarrow} {project}",
                             id={"type": "project_link", "name": project, "path": path},
                             className="htmlA_clickable",
+                            style={"font-size": "25px"},
                             n_clicks=0
                         ),
                         style={"margin-bottom": "1.5vh"}
