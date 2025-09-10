@@ -10,7 +10,7 @@ html {
 
 /* Headers */
 .header {
-    font-size: 30px;
+    font-size: 25px;
     margin-left: 1.5vw;
     margin-top: 1.5vw;
     font-weight: bold;
@@ -27,7 +27,7 @@ html {
 
 /* A tags */
 .htmlA_clickable {
-    font-size: 22px;
+    font-size: 18px;
     margin-left: 1.5vw
 }
 

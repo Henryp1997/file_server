@@ -47,7 +47,7 @@ app.layout = html.Div([
                             f"{helper.rarrow} {project}",
                             id={"type": "project_link", "name": project, "path": path},
                             className="htmlA_clickable",
-                            style={"font-size": "30px"},
+                            style={"font-size": "25px"},
                             n_clicks=0
                         ),
                         style={"margin-bottom": "1.5vh"}
@@ -74,7 +74,6 @@ app.layout = html.Div([
                             f"{helper.rarrow} {project}",
                             id={"type": "project_link", "name": project, "path": path},
                             className="htmlA_clickable",
-                            style={"font-size": "30px"},
                             n_clicks=0
                         ),
                         style={"margin-bottom": "1.5vh"}
