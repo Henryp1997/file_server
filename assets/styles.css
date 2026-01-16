@@ -35,3 +35,23 @@ html {
     cursor: pointer;
     font-weight: bold;
 }
+
+/* Buttons */
+.htmlA_button {
+    background-color: #DADAFF;
+    color: black;
+    padding: 6px 12px;
+    text-decoration: none;
+    border: 1px solid black;
+    border-radius: 4px;
+    font-size: 14px;
+    user-select: none
+}
+
+.htmlA_button:hover {
+    cursor: pointer
+}
+
+.htmlA_button:active {
+    background-color: white
+}

@@ -1,9 +1,10 @@
 import os
 import dash
 import html as inbuilt_html
-from dash import html, dcc, ctx, no_update as nop
+from dash import html, dcc, ctx
+from dash.exceptions import PreventUpdate
 from dash.dependencies import Input, Output, State, ALL
-from flask import abort, url_for, Response, request, send_file
+from flask import abort, Response, request, send_file
 import urllib
 
 # Custom imports
@@ -31,14 +32,21 @@ app.layout = html.Div([
 
     # Project lists, file tree etc
     html.Div([
-        html.Div(
-            html.A(
-                "Projects",
-                id="header",
-                className="header header_not_clickable",
+        html.Div([
+            html.Div(
+                html.A(
+                    "Projects",
+                    id="header",
+                    className="header header_not_clickable",
+                ),
+                style={"display": "inline-block"}
             ),
-            style={"padding-top": "1.5vh"}
-        ),
+            html.Div(
+                html.A(
+                    "Download project as zip",
+                ), id="download_zip", className="htmlA_button", style={"margin-left": "2vw", "display": "none"}
+            )
+        ], style={"padding-top": "1.5vh"}),
         html.Div([
             html.Ul(
                 [
@@ -158,6 +166,7 @@ def view_file():
     Output("header", "className", True),
     Output("deprecated_header", "style", True),
     Output("current_project_path", "data"),
+    Output("download_zip", "style", True),
     Input(
         {"type": "project_link", "name": ALL, "path": ALL},
         "n_clicks"
@@ -178,7 +187,8 @@ def choose_project(_):
         new_header,
         new_header_class,
         helper.hide,
-        project["path"]
+        project["path"],
+        {"margin-left": "2vw", "display": "inline-block"}
     )
     
 
@@ -194,6 +204,7 @@ def choose_project(_):
     Output("deprecated_header", "style", True),
     Output("current_project_path", "data", True),
     Output("opened_folders", "data", True),
+    Output("download_zip", "style", True),
     Input("header", "n_clicks"),
     State("header", "children"),
     prevent_initial_call=True
@@ -213,9 +224,10 @@ def navigate_with_header(n, header_text):
             new_header_class,
             helper.show,
             None,
-            []
+            [],
+            {"margin-left": "2vw", "display": "none"}
         )
-    return (nop,)*6
+    raise PreventUpdate
 
 
 @app.callback(
